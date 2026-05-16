@@ -5,35 +5,27 @@
  */
 
 #include <zephyr/kernel.h>
-#include <zephyr/sys/printk.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/uart.h>
 #include <zephyr/sys/reboot.h>
 #include <zephyr/device.h>
-#include <zephyr/devicetree.h>
 #include <zephyr/sys/crc.h>
-#include <zephyr/input/input.h>
 #include <string.h>
 #include <zephyr/logging/log.h>
 
 #include "flash_helper.h"
 #include "ymodem.h"
-#include "menu.h"
 #include "firmware_loader.h"
 
 LOG_MODULE_DECLARE(spl, CONFIG_LOG_DEFAULT_LEVEL);
-
-#define USER_BUTTON_NODE DT_NODELABEL(user_button)
-static const struct device *const gpio_keys_dev =
-	DEVICE_DT_GET(DT_PARENT(USER_BUTTON_NODE));
 
 #define RED_LED_NODE DT_NODELABEL(red_led)
 #define BLUE_LED_NODE DT_NODELABEL(blue_led)
 static const struct gpio_dt_spec red_led = GPIO_DT_SPEC_GET_OR(RED_LED_NODE, gpios, {0});
 static const struct gpio_dt_spec blue_led = GPIO_DT_SPEC_GET_OR(BLUE_LED_NODE, gpios, {0});
+static const struct gpio_dt_spec btn0 = GPIO_DT_SPEC_GET(DT_ALIAS(mcuboot_button0), gpios);
 
 static void spl_init(void);
-static bool spl_check_button(void);
 static void spl_led_init(void);
 static void spl_led_set(bool red_on, bool blue_on);
 static void spl_jump_to_tpl(void);
@@ -43,42 +35,21 @@ static void spl_delay_ms(uint32_t ms);
 
 int main(void)
 {
-    uint32_t boot;
-    
-    spl_init();
-    
-    boot = show_menu(10000); // 3000 ms
+    int value;
 
-    switch(boot)
+    spl_init();
+    gpio_pin_configure_dt(&btn0, GPIO_INPUT);
+
+    value = gpio_pin_get_dt(&btn0);
+
+    if (value)
     {
-        case UPGRADE_SPL:
-            LOG_DBG("Button pressed - Entering SPL update mode...\n");
-            spl_led_set(true, false);  /* 红灯亮 */
-            if (spl_update_mode(true) == 0) {
-                LOG_DBG("SPL update successful, rebooting...\n");
-            } else {
-                LOG_ERR("SPL update failed, rebooting...\n");
-            }
-            k_sleep(K_MSEC(1000));
-            sys_reboot(SYS_REBOOT_COLD);
-            break;
-        case UPGRADE_TPL:
-            LOG_DBG("Button pressed - Entering TPL update mode...\n");
-            spl_led_set(true, true);  /* 红灯亮 */
-            if (spl_update_mode(false) == 0) {
-                LOG_DBG("TPL update successful, rebooting...\n");
-            } else {
-                LOG_ERR("TPL update failed, rebooting...\n");
-            }
-            k_sleep(K_MSEC(1000));
-            sys_reboot(SYS_REBOOT_COLD);
-            break;
-        case UPGRADE_APP:
-            break;
-        default:
-            NORMAL_BOOT;
-            break;
+        LOG_INF("upgrading TPL");
+        spl_update_mode(false);
+        k_sleep(K_MSEC(1000));
+        sys_reboot(SYS_REBOOT_COLD);
     }
+    
     LOG_DBG("Checking TPL...\n");
     
     {
@@ -99,7 +70,7 @@ int main(void)
                                    flash_external_read);
             
             LOG_ERR("TPL jump failed (rc=%d), entering update mode...", rc);
-            spl_led_set(true, true);  /* 红蓝灯都亮 */
+            spl_led_set(true, true);
             
             if (spl_update_mode(false) == 0) {
                 LOG_INF("TPL update successful, rebooting...\n");
@@ -110,10 +81,9 @@ int main(void)
             k_sleep(K_MSEC(1000));
             sys_reboot(SYS_REBOOT_COLD);
         } else {
-            /* TPL 固件头无效，进入 TPL 更新模式 */
             LOG_ERR("TPL not found or invalid! (rc=%d)\n", rc);
             LOG_DBG("Entering TPL update mode...\n");
-            spl_led_set(true, true);  /* 红蓝灯都亮 */
+            spl_led_set(true, true);
             
             if (spl_update_mode(false) == 0) {
                 LOG_DBG("TPL update successful, rebooting...\n");
@@ -151,17 +121,6 @@ static void spl_init(void)
     LOG_INF("SPL initialized");
 }
 
-/* 检测按钮状态（使用 gpio-keys input API） */
-static bool spl_check_button(void)
-{
-    if (!device_is_ready(gpio_keys_dev)) {
-        LOG_ERR("gpio-keys device not ready");
-        return false;
-    }
-    return true;
-}
-
-/* LED 初始化 */
 static void spl_led_init(void)
 {
     if (device_is_ready(red_led.port)) {
