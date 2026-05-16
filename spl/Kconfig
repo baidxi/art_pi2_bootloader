@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0
+
+source "Kconfig.zephyr"
+
+config SPL_DIRECT_FLASH_WRITE
+	bool "Direct Flash Write Mode (bypass RAM buffer)"
+	default n
+	help
+	  If enabled, YModem received data is written directly to Flash
+	  without using an intermediate RAM buffer. This saves RAM but
+	  requires the target Flash region to be erased before reception.
+
+	  If disabled (default), data is first received into a heap-allocated
+	  RAM buffer, verified, then written to Flash.
