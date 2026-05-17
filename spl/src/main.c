@@ -67,7 +67,7 @@ int main(void) {
       LOG_DBG("Jumping to TPL...\n");
       k_sleep(K_MSEC(100));
 
-      firmware_load_and_jump(&tpl_header, EXT_FLASH_TPL_ADDR,
+      rc = firmware_load_and_jump(&tpl_header, EXT_FLASH_TPL_ADDR,
                              flash_external_read);
 
       LOG_ERR("TPL jump failed (rc=%d), entering update mode...", rc);
