@@ -21,13 +21,19 @@
 #define SPL_FLASH_SIZE             (64 * 1024)  /* 64KB 内部 Flash */
 
 #define EXT_FLASH_BASE_ADDR        0x70000000
+
+/* slot0: TPL (外部 Flash offset 0x000000, 1MB) */
 #define EXT_FLASH_TPL_ADDR         0x70000000
-#define EXT_FLASH_TPL_SIZE         (256 * 1024) /* 256KB */
-#define EXT_FLASH_SLOT0_ADDR       0x70040000
+#define EXT_FLASH_TPL_SIZE         (1 * 1024 * 1024) /* 1MB */
+#define EXT_FLASH_SLOT0_ADDR       0x70000000
 #define EXT_FLASH_SLOT0_SIZE       (1 * 1024 * 1024) /* 1MB */
-#define EXT_FLASH_SLOT1_ADDR       0x70140000
+
+/* slot1: APP (外部 Flash offset 0x100000, 1MB) */
+#define EXT_FLASH_SLOT1_ADDR       0x70100000
 #define EXT_FLASH_SLOT1_SIZE       (1 * 1024 * 1024) /* 1MB */
-#define EXT_FLASH_STORAGE_ADDR     0x70240000
+
+/* storage (外部 Flash offset 0x600000, 8KB) */
+#define EXT_FLASH_STORAGE_ADDR     0x70600000
 #define EXT_FLASH_STORAGE_SIZE     (8 * 1024)    /* 8KB */
 
 /* Magic Number 定义 */

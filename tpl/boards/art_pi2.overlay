@@ -37,19 +37,19 @@
         /* 删除基础设备树中的 storage_partition */
         /delete-node/ partition@0;
 
-        slot0_partition: partition@40000 {
-            label = "slot0";
+        slot0_partition: partition@0 {
+            label = "tpl";
             reg = <0 DT_SIZE_M(1)>;
         };
 
-        slot1_partition: partition@140000 {
-            label = "slot1";
-            reg = <DT_SIZE_M(1) DT_SIZE_M(1)>;
+        slot1_partition: partition@100000 {
+            label = "app";
+            reg = <DT_SIZE_M(5) DT_SIZE_M(1)>;
         };
 
-        storage_partition: partition@240000 {
+        storage_partition: partition@600000 {
             label = "storage";
-            reg = <DT_SIZE_M(2) DT_SIZE_K(8)>;
+            reg = <DT_SIZE_M(7) DT_SIZE_K(8)>;
         };
     };
 };

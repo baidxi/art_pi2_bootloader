@@ -24,6 +24,7 @@ target_sources(app PRIVATE
     src/update_tpl.c
     src/update_app.c
     src/flash_helper.c
+    src/fastboot.c
     ../common/ymodem.c
     ../common/firmware_loader.c
     ../common/fw_header.c
