@@ -19,12 +19,12 @@ target_compile_definitions(app PRIVATE
 # ========================================
 target_sources(app PRIVATE
     src/main.c
+    src/fastboot_ops.c
     src/menu.c
     src/update_spl.c
     src/update_tpl.c
     src/update_app.c
     src/flash_helper.c
-    src/fastboot.c
     ../common/ymodem.c
     ../common/firmware_loader.c
     ../common/fw_header.c
