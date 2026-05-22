@@ -28,13 +28,20 @@ static const struct gpio_dt_spec blue_led =
 static const struct gpio_dt_spec btn0 =
     GPIO_DT_SPEC_GET(DT_ALIAS(mcuboot_button0), gpios);
 
+struct spl_write_ctx {
+  bool update_spl;
+  uint32_t flash_addr;
+#if !defined(CONFIG_SPL_DIRECT_FLASH_WRITE)
+  uint8_t* ram_buf;
+#endif
+};
+
 static void spl_init(void);
 static void spl_led_init(void);
 static void spl_led_set(bool red_on, bool blue_on);
 static void spl_jump_to_tpl(void);
 static void spl_jump_to_address(uint32_t addr);
 static int spl_update_mode(bool update_spl);
-static void spl_delay_ms(uint32_t ms);
 
 int main(void) {
   int value;
@@ -140,16 +147,6 @@ static void spl_led_set(bool red_on, bool blue_on) {
     gpio_pin_set_dt(&blue_led, blue_on ? 1 : 0);
   }
 }
-
-static void spl_delay_ms(uint32_t ms) { k_sleep(K_MSEC(ms)); }
-
-struct spl_write_ctx {
-  bool update_spl;
-  uint32_t flash_addr;
-#if !defined(CONFIG_SPL_DIRECT_FLASH_WRITE)
-  uint8_t* ram_buf;
-#endif
-};
 
 static int spl_block_write(uint32_t addr, const uint8_t* data, size_t len,
                            uint32_t total, int file_size, void* priv) {
